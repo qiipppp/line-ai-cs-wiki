@@ -1,0 +1,5 @@
+Wiki 頁面 24｜raw 來源 7｜投影片 0
+WARN  找不到 index.html，略過簡報檢查
+FAIL  L6 index.md 宣告共 22 頁，實際 23 頁
+
+❌ 1 個問題，請修正後重跑（lint loop）

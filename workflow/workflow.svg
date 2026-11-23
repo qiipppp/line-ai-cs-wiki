@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 700" width="1160" height="700" font-family="PingFang TC, Noto Sans TC, Noto Sans CJK TC, Microsoft JhengHei, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3b463f"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <style>
+      .t{font-size:16px;font-weight:700;fill:#1d2621;text-anchor:middle}
+      .s{font-size:12.5px;fill:#55615a;text-anchor:middle}
+      .l{font-size:12.5px;fill:#c2410c;font-weight:700}
+      .lb{font-size:12.5px;fill:#2563eb;font-weight:700}
+      .h{font-size:20px;font-weight:800;fill:#1d2621}
+      .gen{fill:#e6f8ee;stroke:#06C755;stroke-width:2}
+      .chk{fill:#fff1e6;stroke:#c2410c;stroke-width:2}
+      .hum{fill:#f1f0ea;stroke:#8a938d;stroke-width:2}
+      .e{stroke:#3b463f;stroke-width:2;fill:none}
+      .f{stroke:#c2410c;stroke-width:2;fill:none}
+      .q{stroke:#2563eb;stroke-width:2;fill:none;stroke-dasharray:6 5}
+    </style>
+  </defs>
+  <rect width="1160" height="700" fill="#fbfaf6"/>
+  <text x="40" y="38" class="h">LLM Wiki → 教學 HTML 簡報 Workflow Graph（v2）</text>
+  <text x="40" y="60" font-size="13" fill="#55615a">模型：Claude Opus 5.5（claude-opus-5-5）｜工具：WebSearch、WebFetch、Python lint、無頭 Chrome 截圖</text>
+
+  <!-- 區塊標題 -->
+  <text x="40" y="92" font-size="14" font-weight="700" fill="#04893b">階段 A：建立 LLM Wiki（ingest loop）</text>
+  <text x="40" y="356" font-size="14" font-weight="700" fill="#04893b">階段 B：用 Wiki 做簡報</text>
+
+  <!-- Row 1 -->
+  <rect x="40" y="110" width="180" height="76" rx="12" class="hum"/>
+  <text x="130" y="142" class="t">① 討論範圍</text><text x="130" y="164" class="s">主題、讀者、4 個學習目標</text>
+
+  <rect x="260" y="110" width="180" height="76" rx="12" class="gen"/>
+  <text x="350" y="142" class="t">② 取得資料</text><text x="350" y="164" class="s">WebSearch → WebFetch 全文</text>
+
+  <rect x="480" y="110" width="180" height="76" rx="12" class="chk"/>
+  <text x="570" y="142" class="t">③ 來源核對 ★</text><text x="570" y="164" class="s">全文 vs snippet、標推論／易變</text>
+
+  <rect x="700" y="110" width="180" height="76" rx="12" class="gen"/>
+  <text x="790" y="142" class="t">④ Ingest 寫入</text><text x="790" y="164" class="s">raw・source・concept・index</text>
+
+  <rect x="920" y="110" width="180" height="76" rx="12" class="chk"/>
+  <text x="1010" y="142" class="t">⑤ Lint 檢查</text><text x="1010" y="164" class="s">lint_wiki.py L1–L7</text>
+
+  <line x1="220" y1="148" x2="258" y2="148" class="e" marker-end="url(#a)"/>
+  <line x1="440" y1="148" x2="478" y2="148" class="e" marker-end="url(#a)"/>
+  <line x1="660" y1="148" x2="698" y2="148" class="e" marker-end="url(#a)"/>
+  <line x1="880" y1="148" x2="918" y2="148" class="e" marker-end="url(#a)"/>
+
+  <!-- fail loops row1 -->
+  <path d="M570,110 C570,70 380,70 370,108" class="f" marker-end="url(#r)"/>
+  <text x="400" y="80" class="l">矛盾／取不到全文 → 重取或換來源</text>
+  <path d="M1010,110 C1010,70 810,70 800,108" class="f" marker-end="url(#r)"/>
+  <text x="838" y="80" class="l">有問題 → 修頁面再跑</text>
+  <!-- ingest repeat loop -->
+  <path d="M760,186 C760,250 380,250 370,188" class="e" marker-end="url(#a)"/>
+  <text x="500" y="266" font-size="13" font-weight="700" fill="#3b463f">下一篇來源（重複 ×7）</text>
+
+  <!-- row1 → row2 -->
+  <path d="M1040,186 L1040,320 L130,320 L130,428" class="e" marker-end="url(#a)"/>
+  <text x="600" y="312" font-size="13" font-weight="700" fill="#3b463f">Lint 全部通過 → 開始做簡報</text>
+
+  <!-- Row 2 -->
+  <rect x="40" y="430" width="180" height="76" rx="12" class="gen"/>
+  <text x="130" y="462" class="t">⑥ Query → 大綱</text><text x="130" y="484" class="s">先讀 index.md，只用 Wiki</text>
+
+  <rect x="260" y="430" width="180" height="76" rx="12" class="chk"/>
+  <text x="350" y="462" class="t">⑦ 大綱檢查</text><text x="350" y="484" class="s">目標覆蓋、每點有 Wiki 頁</text>
+
+  <rect x="480" y="430" width="180" height="76" rx="12" class="gen"/>
+  <text x="570" y="462" class="t">⑧ 生成 HTML</text><text x="570" y="484" class="s">每張 data-wiki / data-src</text>
+
+  <rect x="700" y="430" width="180" height="76" rx="12" class="chk"/>
+  <text x="790" y="462" class="t">⑨ 渲染＋對應檢查</text><text x="790" y="484" class="s">逐頁截圖、溢版、lint S1/S2</text>
+
+  <rect x="920" y="430" width="180" height="76" rx="12" class="hum"/>
+  <text x="1010" y="462" class="t">⑩ 發佈＋回寫</text><text x="1010" y="484" class="s">Pages 發佈、Query 回寫</text>
+
+  <line x1="220" y1="468" x2="258" y2="468" class="e" marker-end="url(#a)"/>
+  <line x1="440" y1="468" x2="478" y2="468" class="e" marker-end="url(#a)"/>
+  <line x1="660" y1="468" x2="698" y2="468" class="e" marker-end="url(#a)"/>
+  <line x1="880" y1="468" x2="918" y2="468" class="e" marker-end="url(#a)"/>
+
+  <path d="M350,430 C350,392 160,392 150,428" class="f" marker-end="url(#r)"/>
+  <text x="150" y="388" class="l">漏目標 → 重排大綱</text>
+  <path d="M790,430 C790,392 600,392 590,428" class="f" marker-end="url(#r)"/>
+  <text x="600" y="388" class="l">溢版／對應斷掉 → 修 HTML</text>
+
+  <!-- Wiki 不足 → 回到取得資料 -->
+  <path d="M300,430 L300,188" class="q" marker-end="url(#b)"/>
+  <text x="306" y="296" class="lb">Wiki 不足 → 回 ② 補資料</text>
+  <!-- 回寫 -->
+  <path d="M1080,430 L1080,280 L830,280 L830,188" class="q" marker-end="url(#b)"/>
+  <text x="850" y="274" class="lb">好的 Query 回寫 syntheses</text>
+
+  <!-- legend -->
+  <rect x="40" y="560" width="1080" height="112" rx="12" fill="#fff" stroke="#e3e1d9"/>
+  <rect x="60" y="580" width="22" height="16" rx="4" class="gen"/><text x="90" y="593" font-size="14" fill="#1d2621">生成節點（AI 產出內容）</text>
+  <rect x="290" y="580" width="22" height="16" rx="4" class="chk"/><text x="320" y="593" font-size="14" fill="#1d2621">檢查節點（失敗會往回走）</text>
+  <rect x="520" y="580" width="22" height="16" rx="4" class="hum"/><text x="550" y="593" font-size="14" fill="#1d2621">人參與的節點（討論／發佈）</text>
+  <line x1="760" y1="588" x2="800" y2="588" class="q"/><text x="808" y="593" font-size="14" fill="#1d2621">跨階段回饋</text>
+  <text x="60" y="624" font-size="14" fill="#1d2621">★ v2 修改：v1 只在寫入後用 ⑤ Lint 檢查格式；實際執行發現錯誤多出在取資料（snippet 與全文矛盾、摘要夾帶推論），Lint 抓不到 → 寫入前新增「③ 來源核對」。</text>
+  <text x="60" y="650" font-size="14" fill="#1d2621">重複執行：② → ③ → ④ 每篇來源跑一次（7 次）；⑤ Lint、⑦ 大綱檢查、⑨ 渲染檢查不通過就回上一個生成節點，直到通過。</text>
+</svg>

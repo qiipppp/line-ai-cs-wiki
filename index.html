@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LINE Bot × AI 客服自動化｜LLM Wiki 教學簡報</title>
+<!--
+  教學簡報產生規則見 CLAUDE.md 第 5 節：
+  - 每張 <section class="slide"> 都有 data-wiki（對應 Wiki 頁）與 data-src（對應來源）
+  - scripts/lint_wiki.py 會檢查這兩個屬性，確保「簡報內容 ↔ Wiki ↔ 來源」對得起來
+  - 單一檔案、不依賴外部 CDN，GitHub Pages 直接可看
+-->
+<style>
+  :root{
+    --green:#06C755; --green-d:#04893b; --green-l:#e6f8ee;
+    --ink:#1d2621; --ink2:#55615a; --paper:#fbfaf6; --card:#ffffff;
+    --line:#e3e1d9; --warn:#c2410c; --warn-l:#fff1e6; --blue:#2563eb; --blue-l:#e8f0ff;
+    --r:14px;
+    font-family:"PingFang TC","Noto Sans TC","Noto Sans CJK TC","Microsoft JhengHei",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#e9e7df;color:var(--ink)}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+  /* 16:9 舞台：用 JS 依視窗等比縮放 */
+  #stage{width:1280px;height:720px;position:relative;background:var(--paper);
+    border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.12);overflow:hidden;transform-origin:center center}
+  .slide{position:absolute;inset:0;padding:48px 72px 76px;display:none;flex-direction:column;justify-content:center}
+  .slide.active{display:flex;animation:in .35s ease}
+  @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .kicker{font-size:15px;font-weight:700;letter-spacing:.12em;color:var(--green-d);margin-bottom:10px}
+  h1{font-size:54px;line-height:1.2;margin:0 0 18px}
+  h2{font-size:38px;line-height:1.25;margin:0 0 22px}
+  h3{font-size:22px;margin:0 0 8px}
+  p,li{font-size:24px;line-height:1.6}
+  .muted{color:var(--ink2)}
+  .small{font-size:17px}
+  .grid{display:grid;gap:18px}
+  .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}
+  .card p,.card li{font-size:20px;margin:0;line-height:1.55}
+  .card h3{font-size:24px}
+  a{color:var(--green-d)}
+  .card .big{font-size:40px;line-height:1;margin-bottom:10px}
+  .num{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;
+    align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-bottom:10px}
+  table{border-collapse:collapse;width:100%;font-size:19px;background:var(--card);border-radius:var(--r);overflow:hidden}
+  th,td{border-bottom:1px solid var(--line);padding:12px 16px;text-align:left;vertical-align:top}
+  th{background:var(--green-l);font-weight:700}
+  code,pre{font-family:"SFMono-Regular",Consolas,"Noto Sans Mono CJK TC",monospace}
+  pre{background:#13201a;color:#d8f5e4;padding:18px 22px;border-radius:var(--r);font-size:19px;line-height:1.55;margin:0;white-space:pre-wrap}
+  .tag{display:inline-block;font-size:14px;font-weight:700;padding:2px 8px;border-radius:6px;vertical-align:middle;margin-left:6px}
+  .tag.inf{background:var(--blue-l);color:var(--blue)} .tag.vol{background:var(--warn-l);color:var(--warn)}
+  .cite{font-size:13px;font-weight:700;color:var(--green-d);background:var(--green-l);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:middle}
+  .callout{border-left:5px solid var(--green);background:var(--green-l);padding:14px 20px;border-radius:0 var(--r) var(--r) 0;font-size:20px}
+  .callout.warn{border-color:var(--warn);background:var(--warn-l)}
+  /* 聊天泡泡 */
+  .chat{display:flex;flex-direction:column;gap:10px}
+  .b{max-width:78%;padding:10px 16px;border-radius:18px;font-size:19px;line-height:1.45}
+  .b.u{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+  .b.s{background:var(--green);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  /* 旅程圖 */
+  .flow{display:flex;align-items:stretch;gap:10px;margin-top:6px}
+  .node{flex:1;background:var(--card);border:2px solid var(--line);border-radius:var(--r);padding:14px 12px;text-align:center;transition:.25s}
+  .node .big{font-size:34px}
+  .node b{display:block;font-size:17px;margin:6px 0 4px}
+  .node span{font-size:16px;color:var(--ink2);line-height:1.4;display:block}
+  .node span.cite{display:inline;font-size:12px;color:var(--green-d)}
+  .node.on{border-color:var(--green);background:var(--green-l);transform:translateY(-4px)}
+  .arrow{align-self:center;color:var(--ink2);font-size:22px}
+  .btn{white-space:nowrap;font:inherit;font-size:18px;font-weight:700;border:0;background:var(--green);color:#fff;padding:10px 18px;border-radius:10px;cursor:pointer}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  input[type=text]{font:inherit;font-size:20px;padding:10px 14px;border:2px solid var(--line);border-radius:10px;width:100%}
+  .result{margin-top:12px;font-size:20px;font-weight:700;min-height:32px}
+  .ok{color:var(--green-d)} .no{color:var(--warn)}
+  .check label{display:flex;gap:12px;align-items:flex-start;font-size:18px;padding:6px 0;cursor:pointer}
+  .check input{width:20px;height:20px;margin-top:4px;accent-color:var(--green)}
+  .quiz .opt{display:block;width:100%;text-align:left;font:inherit;font-size:18px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 14px;margin:6px 0;cursor:pointer}
+  .quiz .opt.right{background:var(--green-l);border-color:var(--green)}
+  .quiz .opt.wrong{background:var(--warn-l);border-color:var(--warn)}
+  .fb{font-size:16px;min-height:22px;color:var(--ink2)}
+  /* 頁尾：Wiki 出處（按 W 切換） */
+  .wiki-foot{position:absolute;left:72px;right:200px;bottom:22px;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wiki-foot a{color:var(--green-d)}
+  body.hide-wiki .wiki-foot{display:none}
+  #stage.on-cover #counter{color:#e2ffee}
+  #counter{position:absolute;right:28px;bottom:20px;font-size:15px;color:var(--ink2);font-variant-numeric:tabular-nums}
+  #bar{position:absolute;left:0;bottom:0;height:5px;background:var(--green);transition:width .3s}
+  .navbtn{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.85);font-size:20px;cursor:pointer;z-index:5}
+  #prev{left:12px}#next{right:12px}
+  .cover{background:linear-gradient(135deg,#06C755 0%,#04893b 100%);color:#fff}
+  .cover .kicker{color:#d7ffe7}.cover .muted{color:#e2ffee}
+  .cover .wiki-foot,.cover .wiki-foot a{color:#d7ffe7}
+  .pill{display:inline-block;background:rgba(255,255,255,.18);border-radius:999px;padding:6px 14px;font-size:17px;margin-right:8px}
+  ul{margin:0;padding-left:1.2em}
+  .tight li{margin:4px 0}
+  /* 手機：不縮放，改成可捲動 */
+  @media (max-width:760px){
+    body{display:block;overflow:auto;background:var(--paper)}
+    #stage{width:100%;height:auto;min-height:100vh;transform:none!important;border-radius:0;box-shadow:none}
+    .slide{position:relative;padding:28px 20px 80px}
+    h1{font-size:34px}h2{font-size:26px}p,li{font-size:17px}
+    .g2,.g3,.g4{grid-template-columns:1fr}.flow{flex-direction:column}.arrow{transform:rotate(90deg)}
+    .wiki-foot{left:20px;right:20px;white-space:normal;bottom:44px}
+    .navbtn{position:fixed;top:auto;bottom:12px;transform:none}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- 1 封面 -->
+<section class="slide cover" data-wiki="overview.md">
+  <div style="margin-top:110px">
+    <div class="kicker">TAICA 生成式 AI｜LLM Wiki 教學簡報</div>
+    <h1>LINE Bot × AI 客服自動化</h1>
+    <p class="muted" style="font-size:26px">讓 LINE 官方帳號 24 小時回答客人——而且不亂講話、會交棒給真人</p>
+    <p style="margin-top:40px"><span class="pill">⌨️ ← → 換頁</span><span class="pill">👆 點按左右鍵</span><span class="pill">W 切換 Wiki 出處</span></p>
+  </div>
+</section>
+
+<!-- 2 學習目標 -->
+<section class="slide" data-wiki="overview.md">
+  <div class="kicker">學習目標</div>
+  <h2>今天學完，你會知道 4 件事</h2>
+  <div class="grid g4" style="margin-top:10px">
+    <div class="card"><div class="num">1</div><h3>為什麼</h3><p>LINE 內建的自動回應不夠用在哪裡？</p></div>
+    <div class="card"><div class="num">2</div><h3>怎麼跑</h3><p>客人傳一句話，到收到回覆，中間發生什麼事？</p></div>
+    <div class="card"><div class="num">3</div><h3>怎麼接 AI</h3><p>不租伺服器，也能讓 AI 理解客人的話</p></div>
+    <div class="card"><div class="num">4</div><h3>怎麼不出事</h3><p>防亂講、會交棒、顧好安全與成本</p></div>
+  </div>
+  <p class="muted small" style="margin-top:28px">適合對象：不熟程式的店家、非資訊科系同學。範例情境：一家寵物美容店。</p>
+</section>
+
+<!-- 3 情境 -->
+<section class="slide" data-wiki="concepts/keyword-auto-reply.md" data-src="S07">
+  <div class="kicker">① 情境問題</div>
+  <h2>店員每天都在回答一樣的問題</h2>
+  <div class="grid g2" style="align-items:center">
+    <div class="chat">
+      <div class="b u">請問今天幾點關門？</div>
+      <div class="b u">營業時間是？</div>
+      <div class="b u">週六下午可以預約洗澡嗎？</div>
+      <div class="b u">你們在哪裡呀？</div>
+      <div class="b s">（店員正在幫狗狗吹毛，30 分鐘後才看到…）</div>
+    </div>
+    <div>
+      <div class="callout">重複問題耗人力，回覆慢還會讓客人流失<span class="cite">S07</span></div>
+      <p style="margin-top:20px">LINE 官方帳號其實內建「<b>自動回應訊息</b>」，可以把常見問題做成罐頭訊息<span class="cite">S07</span></p>
+      <p class="muted">那為什麼還需要 AI？→ 下一頁試試看</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 關鍵字限制（互動） -->
+<section class="slide" data-wiki="concepts/keyword-auto-reply.md" data-src="S07">
+  <div class="kicker">① 情境問題｜動手試</div>
+  <h2>關鍵字自動回應：要一字不差</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="small muted">後台設定的關鍵字：<b style="color:var(--ink)">營業時間</b></p>
+      <p class="small" style="margin:10px 0 8px">假裝你是客人，輸入一句話：</p>
+      <input type="text" id="kwInput" value="請問營業時間" aria-label="測試輸入">
+      <div style="margin-top:10px"><button class="btn" id="kwBtn">送出</button></div>
+      <div class="result" id="kwResult"></div>
+    </div>
+    <div>
+      <h3>原生自動回應的 3 個規則<span class="cite">S07</span></h3>
+      <ul class="tight">
+        <li><b>完全比對</b>：輸入要和關鍵字 100% 相同才觸發</li>
+        <li><b>隨機發送</b>：多則沒設關鍵字的回應，會隨機挑一則回</li>
+        <li><b>關鍵字優先</b>：符合關鍵字時一定先回關鍵字內容</li>
+      </ul>
+      <div class="callout warn" style="margin-top:18px">客人換個說法，機器人就聽不懂了</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 關鍵字 vs AI -->
+<section class="slide" data-wiki="syntheses/why-ai-not-keyword.md" data-src="S07,S03,S05">
+  <div class="kicker">① 情境問題｜比較</div>
+  <h2>關鍵字自動回應 vs AI 客服</h2>
+  <table>
+    <tr><th></th><th>關鍵字自動回應</th><th>AI 客服</th></tr>
+    <tr><td>聽懂換句話說</td><td>✗ 要一字不差<span class="cite">S07</span></td><td>✓ 能理解並整理成日期、時間、分類<span class="cite">S03</span></td></tr>
+    <tr><td>要不要寫程式</td><td>不用</td><td>要（或用現成工具）</td></tr>
+    <tr><td>會不會亂講</td><td>不會，只回設定好的</td><td>可能，需要護欄<span class="cite">S05</span></td></tr>
+  </table>
+  <div class="callout" style="margin-top:24px">結論：固定、簡單的問題用關鍵字就夠；說法多變、要整理資訊的才交給 AI<span class="tag inf">推論</span></div>
+</section>
+
+<!-- 6 名詞地圖 -->
+<section class="slide" data-wiki="concepts/line-official-account.md,concepts/messaging-api.md" data-src="S03,S01,S02">
+  <div class="kicker">② 名詞地圖</div>
+  <h2>先認識 5 個角色（用一家店來比喻）</h2>
+  <div class="grid g3" style="grid-template-columns:repeat(5,1fr);gap:14px">
+    <div class="card"><div class="big">🏪</div><h3>LINE 官方帳號</h3><p>店面櫃檯，客人在這裡跟你聊天</p></div>
+    <div class="card"><div class="big">☎️</div><h3>Messaging API</h3><p>櫃檯通往辦公室的內線，程式用它收發訊息<span class="cite">S01</span><span class="cite">S02</span></p></div>
+    <div class="card"><div class="big">🔔</div><h3>Webhook</h3><p>門鈴：客人一開口，LINE 就通知你</p></div>
+    <div class="card"><div class="big">🧑‍💼</div><h3>Bot 伺服器</h3><p>接電話的秘書（例：Apps Script）</p></div>
+    <div class="card"><div class="big">🧠</div><h3>LLM</h3><p>秘書旁邊很懂話意的顧問（例：Gemini）</p></div>
+  </div>
+  <p class="small" style="margin-top:22px"><b>開通順序</b>：在 LINE Official Account Manager 建官方帳號 → 啟用 Messaging API → Developers Console 出現 channel → 發行 channel access token<span class="cite">S03</span></p>
+</section>
+
+<!-- 7 一則訊息的旅程（逐步） -->
+<section class="slide" data-wiki="syntheses/architecture.md" data-src="S01,S02,S03">
+  <div class="kicker">③ 運作原理</div>
+  <h2>一則訊息的旅程</h2>
+  <div class="flow" id="flow">
+    <div class="node"><div class="big">🙋</div><b>① 客人傳訊息</b><span>「週六下午可以預約洗澡嗎？」</span></div><div class="arrow">→</div>
+    <div class="node"><div class="big">🔔</div><b>② Webhook</b><span>LINE 用 HTTP POST 通知 Bot<span class="cite">S01</span></span></div><div class="arrow">→</div>
+    <div class="node"><div class="big">🛡️</div><b>③ 驗證・去重</b><span>確認真的是 LINE 送的<span class="cite">S01</span></span></div><div class="arrow">→</div>
+    <div class="node"><div class="big">🧠</div><b>④ 問 AI</b><span>Gemini 理解語意，回 JSON<span class="cite">S03</span></span></div><div class="arrow">→</div>
+    <div class="node"><div class="big">📒</div><b>⑤ 記錄</b><span>寫進試算表；需要就通知店員<span class="cite">S03</span></span></div><div class="arrow">→</div>
+    <div class="node"><div class="big">💬</div><b>⑥ Reply</b><span>用 replyToken 回覆<span class="cite">S02</span></span></div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;margin-top:26px">
+    <button class="btn" id="flowNext">下一步 ▶</button><button class="btn ghost" id="flowReset">重來</button>
+    <span id="flowTip" class="muted" style="font-size:19px">按「下一步」看訊息走到哪一站</span>
+  </div>
+  <p class="small muted" style="margin-top:16px">「通知店員」一站是依 S05、S06 建議加入的設計<span class="tag inf">推論</span></p>
+</section>
+
+<!-- 8 Webhook -->
+<section class="slide" data-wiki="concepts/webhook.md" data-src="S01,S03">
+  <div class="kicker">③ 運作原理｜Webhook</div>
+  <h2>Webhook＝門鈴：客人按鈴，你才應門</h2>
+  <div class="grid g3">
+    <div class="card"><div class="big">🔏</div><h3>先驗簽章</h3><p>檢查 <code>x-line-signature</code>，確定是 LINE 送的、沒被竄改；別人也可能送惡意請求<span class="cite">S01</span></p></div>
+    <div class="card"><div class="big">🔁</div><h3>重送不可靠</h3><p>只有沒回 2xx 才重送；重送預設關閉，也不保證成功<span class="cite">S01</span></p></div>
+    <div class="card"><div class="big">🧹</div><h3>去重與排序</h3><p>可能重複、亂序：用 <code>webhookEventId</code> 去重、看 <code>timestamp</code><span class="cite">S01</span></p></div>
+  </div>
+  <div class="callout warn" style="margin-top:22px">用 Apps Script 時：它讀不到簽章 header → <b>/exec 網址要保密</b>，或加 userId 白名單<span class="cite">S03</span></div>
+</section>
+
+<!-- 9 Reply vs Push -->
+<section class="slide" data-wiki="concepts/reply-vs-push.md" data-src="S02,S03">
+  <div class="kicker">③ 運作原理｜回話的方式</div>
+  <h2>Reply（回覆）vs Push（主動推播）</h2>
+  <table>
+    <tr><th></th><th>Reply</th><th>Push 系列</th></tr>
+    <tr><td>比喻</td><td>櫃檯回答客人的問題</td><td>店家主動打電話：「毛孩美容好了」</td></tr>
+    <tr><td>誰先開始</td><td>客人先傳訊息</td><td>店家主動（Push／Multicast／Narrowcast／Broadcast）<span class="cite">S02</span></td></tr>
+    <tr><td>需要</td><td>webhook 給的 <code>replyToken</code><span class="cite">S02</span></td><td>使用者 ID 或受眾<span class="cite">S02</span></td></tr>
+    <tr><td>額度</td><td>不計入每月推播額度<span class="cite">S03</span></td><td>計入，以<b>收件人數</b>計算<span class="cite">S02</span></td></tr>
+  </table>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="callout">算算看：4 個訊息物件發給 5 個人 ＝ <b>5 則</b><span class="cite">S02</span></div>
+    <div class="callout warn">每次請求最多 5 個訊息物件<span class="cite">S02</span>；免費推播額度依方案（S03 當時寫每月 200 則）<span class="tag vol">易變</span></div>
+  </div>
+</section>
+
+<!-- 10 Apps Script + Gemini -->
+<section class="slide" data-wiki="concepts/gas-gemini-serverless.md" data-src="S03">
+  <div class="kicker">④ 實作要點</div>
+  <h2>免租伺服器：Google 工具四件組</h2>
+  <div class="flow">
+    <div class="node on"><div class="big">💬</div><b>LINE 官方帳號</b><span>前端介面</span></div><div class="arrow">⇄</div>
+    <div class="node on"><div class="big">⚙️</div><b>Apps Script</b><span>執行程式的環境</span></div><div class="arrow">⇄</div>
+    <div class="node on"><div class="big">🧠</div><b>Gemini API</b><span>理解語意</span></div><div class="arrow">⇄</div>
+    <div class="node on"><div class="big">📊</div><b>Google 試算表</b><span>資料庫</span></div>
+  </div>
+  <p class="small muted" style="text-align:right;margin:6px 0 10px">四元件分工<span class="cite">S03</span></p>
+  <div class="grid g3">
+    <div class="card"><h3>🔑 金鑰不進程式碼</h3><p>放在 Script Properties<span class="cite">S03</span></p></div>
+    <div class="card"><h3>🚀 改完要重新部署</h3><p>「編輯部署 → 新版本」，否則不生效<span class="cite">S03</span></p></div>
+    <div class="card"><h3>🧪 分段測試</h3><p>先測 AI → 試算表，通過再接 LINE；記得關掉原生自動回應<span class="cite">S03</span></p></div>
+  </div>
+</section>
+
+<!-- 11 結構化輸出 -->
+<section class="slide" data-wiki="concepts/structured-output.md" data-src="S03">
+  <div class="kicker">④ 實作要點｜Prompt 設計</div>
+  <h2>讓 AI「填表單」，不要「寫作文」</h2>
+  <div class="grid g2">
+    <div>
+      <p>S03 的 Prompt 規則<span class="cite">S03</span></p>
+      <ul class="tight">
+        <li>只回 <b>JSON</b>，不要多餘的話</li>
+        <li>分類<b>固定選項</b>（繳費／會議／其他）</li>
+        <li>日期統一 <code>YYYY-MM-DD</code>，「明天」要換算</li>
+        <li><b>缺的欄位留空，不准編造</b></li>
+        <li>AI 沒回應 → 送備援訊息請客人重傳</li>
+      </ul>
+    </div>
+    <div>
+      <p class="small muted">改寫成寵物美容預約情境<span class="tag inf">推論</span></p>
+<pre>客人：「週六下午兩點可以幫狗狗洗澡嗎？」
+
+{
+  "intent": "預約",
+  "date": "2026-11-21",
+  "time": "14:00",
+  "need_human": false
+}</pre>
+      <p class="small muted" style="margin-top:8px">欄位固定 → 程式才能穩定寫進試算表</p>
+    </div>
+  </div>
+</section>
+
+<!-- 12 對話記憶 -->
+<section class="slide" data-wiki="concepts/conversation-memory.md" data-src="S04,S01">
+  <div class="kicker">④ 實作要點｜記憶</div>
+  <h2>AI 是金魚，對話歷史是牠的筆記本</h2>
+  <div class="grid g2">
+    <div class="chat card">
+      <div class="b u">我想幫柴犬預約洗澡</div>
+      <div class="b s">好的！請問想約哪一天？</div>
+      <div class="b u">週六</div>
+      <div class="b s" style="background:var(--warn)">🐟 沒有記憶：「請問您要預約什麼服務？」</div>
+    </div>
+    <div>
+      <ul class="tight">
+        <li>一問一答的 API 每次都會忘記前面內容<span class="cite">S04</span></li>
+        <li>做法：把之前的問答一起送給模型；Gemini 的 ChatSession 會自動累積 History<span class="cite">S04</span></li>
+        <li>訊息文字只能在 webhook 當下讀取，事後拿不回來<span class="cite">S01</span></li>
+      </ul>
+      <div class="callout" style="margin-top:16px">所以要自己存對話（例如以 userId 存進試算表）<span class="tag inf">推論</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 三個翻車案例 -->
+<section class="slide" data-wiki="concepts/grounding-knowledge-base.md" data-src="S05">
+  <div class="kicker">⑤ 風險與對策｜真實案例</div>
+  <h2>AI 客服翻車的 3 種陷阱<span class="cite">S05</span></h2>
+  <div class="grid g3">
+    <div class="card"><div class="big">🚗</div><h3>設計陷阱</h3><p>車商機器人被客人操弄，「同意」用 1 美元賣車</p><p class="muted" style="margin-top:10px">→ 缺意圖偵測與商業規則護欄</p></div>
+    <div class="card"><div class="big">✈️</div><h3>責任陷阱</h3><p>Air Canada 機器人說錯退票規定，仲裁庭判公司要負責</p><p class="muted" style="margin-top:10px">→ 機器人說的話＝公司說的話</p></div>
+    <div class="card"><div class="big">📄</div><h3>知識陷阱</h3><p>AI 讀對了政策頁，但頁面本身漏了「要提前 60 天」</p><p class="muted" style="margin-top:10px">→ 知識庫要完整、最新</p></div>
+  </div>
+  <div class="callout warn" style="margin-top:22px">換成寵物美容店：AI 隨口答應「今天打 5 折」，店家可能就得認帳<span class="tag inf">推論</span></div>
+</section>
+
+<!-- 14 防亂講四招 -->
+<section class="slide" data-wiki="concepts/grounding-knowledge-base.md" data-src="S05,S06,S03">
+  <div class="kicker">⑤ 風險與對策</div>
+  <h2>防亂講 4 招：讓 AI 只照「店務手冊」回答</h2>
+  <div class="grid g4">
+    <div class="card"><div class="num">1</div><h3>只依知識庫</h3><p>不知道就說不知道，並給下一步<span class="cite">S06</span></p></div>
+    <div class="card"><div class="num">2</div><h3>限制輸出</h3><p>固定分類、缺值留空不准編<span class="cite">S03</span></p></div>
+    <div class="card"><div class="num">3</div><h3>上線前測試</h3><p>離線評估：答案有沒有依據、安不安全<span class="cite">S05</span></p></div>
+    <div class="card"><div class="num">4</div><h3>低信心轉真人</h3><p>模稜兩可的問題，不給確定答案<span class="cite">S05</span></p></div>
+  </div>
+  <div class="callout" style="margin-top:24px">還有第 5 件事：<b>指定一個人</b>負責更新知識庫——知識本身過期，AI 讀得再準也沒用<span class="cite">S05</span></div>
+</section>
+
+<!-- 15 真人交棒 -->
+<section class="slide" data-wiki="concepts/human-handoff.md" data-src="S06">
+  <div class="kicker">⑤ 風險與對策｜交棒</div>
+  <h2>什麼時候該把對話交給真人？</h2>
+  <div class="grid g2">
+    <div>
+      <h3>4 種觸發<span class="cite">S06</span></h3>
+      <ul class="tight">
+        <li>🙋 客人<b>要求</b>找真人 → 第一次就轉</li>
+        <li>😤 <b>情緒</b>訊號：重複問、負面字眼</li>
+        <li>❓ <b>低信心</b>或知識庫沒答案</li>
+        <li>⛔ <b>政策主題</b>：退款例外、帳務爭議、帳號安全 → 一律轉</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>交棒時要帶的「棒子」<span class="cite">S06</span></h3>
+      <p>完整對話紀錄＋客人聯絡資料＋AI 引用的來源</p>
+      <p style="margin-top:12px">讓店員立刻知道：<b>問了什麼？AI 答了什麼？客人是誰？</b></p>
+      <div class="b s" style="margin-top:16px;max-width:100%">已幫您轉給美容師小美，約 30 分鐘內回覆，不用再說一次喔！</div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 安全隱私成本 -->
+<section class="slide" data-wiki="concepts/security-privacy-cost.md" data-src="S01,S02,S03">
+  <div class="kicker">⑤ 風險與對策</div>
+  <h2>上線前一定要想的 3 件事</h2>
+  <div class="grid g3">
+    <div class="card"><div class="big">🛡️</div><h3>安全</h3><ul class="tight small"><li>驗簽章，防假請求<span class="cite">S01</span></li><li>GAS：網址保密＋白名單<span class="cite">S03</span></li><li>金鑰放 Script Properties<span class="cite">S03</span></li></ul></div>
+    <div class="card"><div class="big">🔒</div><h3>隱私</h3><ul class="tight small"><li>免費層 Gemini 請求可能被用於改善產品，別傳敏感資料<span class="cite">S03</span></li><li>客人收回訊息，你的紀錄也要刪<span class="cite">S01</span></li></ul></div>
+    <div class="card"><div class="big">💰</div><h3>成本<span class="tag vol">易變</span></h3><ul class="tight small"><li>推播以收件人數計<span class="cite">S02</span></li><li>Reply 不計推播額度<span class="cite">S03</span></li><li>Gemini 免費層有上限，多人用可能爆<span class="cite">S03</span></li></ul></div>
+  </div>
+</section>
+
+<!-- 17 檢查清單 -->
+<section class="slide" data-wiki="syntheses/launch-checklist.md" data-src="S01,S03,S05,S06">
+  <div class="kicker">⑥ 檢查清單</div>
+  <h2>上線前打勾：<span id="ckCount">0</span> / 9</h2>
+  <div class="grid g3 check" id="checklist">
+    <div class="card"><h3>連線</h3>
+      <label><input type="checkbox">Webhook URL 已設定並啟用<span class="cite">S03</span></label>
+      <label><input type="checkbox">關閉原生自動回應<span class="cite">S03</span></label>
+      <label><input type="checkbox">改完程式已部署新版本<span class="cite">S03</span></label></div>
+    <div class="card"><h3>安全</h3>
+      <label><input type="checkbox">驗證來源（簽章或白名單）<span class="cite">S01</span></label>
+      <label><input type="checkbox">金鑰不寫在程式碼<span class="cite">S03</span></label>
+      <label><input type="checkbox">重複事件會去重<span class="cite">S01</span></label></div>
+    <div class="card"><h3>品質與交棒</h3>
+      <label><input type="checkbox">只依知識庫回答<span class="cite">S05</span></label>
+      <label><input type="checkbox">用真實問句離線測過<span class="cite">S05</span></label>
+      <label><input type="checkbox">4 種交棒觸發都有設計<span class="cite">S06</span></label></div>
+  </div>
+  <div class="result ok" id="ckDone"></div>
+</section>
+
+<!-- 18 小測驗 -->
+<section class="slide quiz" data-wiki="concepts/keyword-auto-reply.md,concepts/reply-vs-push.md,concepts/human-handoff.md" data-src="S07,S02,S06">
+  <div class="kicker">⑦ 小測驗</div>
+  <h2>檢查一下你學會了沒</h2>
+  <div class="grid g3">
+    <div class="card" data-q>
+      <h3>Q1 後台關鍵字設「營業時間」，客人打「請問營業時間」會怎樣？</h3>
+      <button class="opt" data-ok="0">觸發關鍵字回應</button>
+      <button class="opt" data-ok="1">不會觸發</button>
+      <div class="fb" data-fb="原生關鍵字要 100% 相同才觸發（S07）"></div>
+    </div>
+    <div class="card" data-q>
+      <h3>Q2 3 個訊息物件 Push 給 10 個人，算幾則？</h3>
+      <button class="opt" data-ok="0">30 則</button>
+      <button class="opt" data-ok="1">10 則</button>
+      <button class="opt" data-ok="0">3 則</button>
+      <div class="fb" data-fb="額度以收件人數計算（S02）"></div>
+    </div>
+    <div class="card" data-q>
+      <h3>Q3 客人說「我要申請退款例外」，AI 應該？</h3>
+      <button class="opt" data-ok="0">依信心度自行判斷</button>
+      <button class="opt" data-ok="1">一律轉給真人</button>
+      <div class="fb" data-fb="政策限制主題固定轉人工，不看模型信心（S06）"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 19 總結 -->
+<section class="slide" data-wiki="overview.md" data-src="S01,S02,S03,S04,S05,S06,S07">
+  <div class="kicker">⑧ 總結</div>
+  <h2>一句話帶走：AI 負責理解，規則負責把關，真人負責收尾</h2>
+  <div class="grid g2">
+    <div>
+      <ul class="tight">
+        <li>關鍵字要一字不差 → 說法多變才用 AI</li>
+        <li>Webhook 通知、Bot 處理、Reply 回覆</li>
+        <li>AI 填表單（JSON）、靠歷史才有記憶</li>
+        <li>只依知識庫、低信心與政策題交給真人</li>
+        <li>驗來源、護隱私、算額度</li>
+      </ul>
+    </div>
+    <div class="card small">
+      <h3>延伸閱讀（本簡報的 7 篇來源）</h3>
+      <ol class="small tight" style="padding-left:1.4em;margin:0">
+        <li><a href="https://developers.line.biz/en/docs/messaging-api/receiving-messages/">S01 LINE：Receive messages</a></li>
+        <li><a href="https://developers.line.biz/en/docs/messaging-api/sending-messages">S02 LINE：Send messages</a></li>
+        <li><a href="https://www.bnext.com.tw/article/91909/line-ai-todo-gas-gemini">S03 數位時代：LINE × GAS × Gemini</a></li>
+        <li><a href="https://techblog.lycorp.co.jp/zh-hant/build-llm-linebot-google-gemini-pro-chat-session">S04 LY Corp：有記憶的 LINE Bot</a></li>
+        <li><a href="https://www.thoughtworks.com/en-gb/insights/blog/generative-ai/when-chatbots-mislead-tree-traps-and-fixes-for-ai-customer-service">S05 Thoughtworks：三個陷阱</a></li>
+        <li><a href="https://hyperleap.ai/blog/chatbot-human-handoff-best-practices">S06 Hyperleap：轉真人設計</a></li>
+        <li><a href="https://uptogo.com.tw/?p=1717954">S07 UPTOGO：LINE 罐頭訊息</a></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<div id="bar"></div><div id="counter"></div>
+<button class="navbtn" id="prev" aria-label="上一頁">‹</button>
+<button class="navbtn" id="next" aria-label="下一頁">›</button>
+</div>
+
+<script>
+/* ===== 設定：把 REPO 改成你的 GitHub repo 網址，頁尾的 Wiki 連結就會開在 GitHub 上 =====
+   例：const REPO = "https://github.com/你的帳號/line-ai-cs-wiki/blob/main/";
+   留空則使用相對路徑（GitHub Pages 會直接顯示 .md 原始文字） */
+const REPO = "";
+
+const slides = [...document.querySelectorAll('.slide')];
+let cur = 0;
+
+/* 依每張投影片的 data-wiki / data-src 自動產生頁尾「Wiki 出處」 */
+slides.forEach(s => {
+  const pages = (s.dataset.wiki || '').split(',').filter(Boolean);
+  const srcs = s.dataset.src ? '｜來源 ' + s.dataset.src.replace(/,/g, '、') : '';
+  const f = document.createElement('div');
+  f.className = 'wiki-foot';
+  f.innerHTML = '📚 Wiki：' + pages.map(p => `<a href="${REPO}wiki/${p.trim()}" target="_blank">${p.trim()}</a>`).join('、') + srcs;
+  s.appendChild(f);
+});
+
+function show(i){
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => s.classList.toggle('active', k === cur));
+  document.getElementById('stage').classList.toggle('on-cover', slides[cur].classList.contains('cover'));
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + slides.length;
+  document.getElementById('bar').style.width = ((cur + 1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (cur + 1));
+}
+document.getElementById('prev').onclick = () => show(cur - 1);
+document.getElementById('next').onclick = () => show(cur + 1);
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;          // 打字時不要換頁
+  if (['ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); show(cur + 1); }
+  if (['ArrowLeft','PageUp'].includes(e.key)) show(cur - 1);
+  if (e.key === 'w' || e.key === 'W') document.body.classList.toggle('hide-wiki');
+});
+/* 觸控滑動 */
+let tx = null;
+document.addEventListener('touchstart', e => tx = e.touches[0].clientX, {passive:true});
+document.addEventListener('touchend', e => {
+  if (tx === null) return;
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 60) show(cur + (dx < 0 ? 1 : -1));
+  tx = null;
+});
+
+/* 16:9 等比縮放 */
+function fit(){
+  const st = document.getElementById('stage');
+  if (window.innerWidth <= 760) { st.style.transform = 'none'; return; }
+  const k = Math.min(window.innerWidth / 1300, window.innerHeight / 740);
+  st.style.transform = `scale(${k})`;
+}
+window.addEventListener('resize', fit); fit();
+
+/* 投影片 4：關鍵字完全比對示範 */
+document.getElementById('kwBtn').onclick = () => {
+  const v = document.getElementById('kwInput').value.trim();
+  const r = document.getElementById('kwResult');
+  if (v === '營業時間') { r.className = 'result ok'; r.textContent = '✅ 觸發！回覆：「我們每天 10:00–19:00 營業」'; }
+  else { r.className = 'result no'; r.textContent = '❌ 沒有觸發——「' + v + '」≠「營業時間」，必須一字不差'; }
+};
+
+/* 投影片 7：逐步點亮旅程 */
+const nodes = [...document.querySelectorAll('#flow .node')];
+const tips = ['客人在 LINE 打字送出','LINE 平台把事件 POST 到你的 Webhook URL','先確認來源、排除重複事件','AI 把句子整理成固定欄位','存起來，需要真人就通知店員','用 replyToken 把答案送回給客人 🎉'];
+let step = -1;
+document.getElementById('flowNext').onclick = () => {
+  step = Math.min(step + 1, nodes.length - 1);
+  nodes.forEach((n, k) => n.classList.toggle('on', k <= step));
+  document.getElementById('flowTip').textContent = tips[step];
+};
+document.getElementById('flowReset').onclick = () => {
+  step = -1; nodes.forEach(n => n.classList.remove('on'));
+  document.getElementById('flowTip').textContent = '按「下一步」看訊息走到哪一站';
+};
+
+/* 投影片 17：檢查清單計數 */
+const boxes = [...document.querySelectorAll('#checklist input')];
+boxes.forEach(b => b.onchange = () => {
+  const n = boxes.filter(x => x.checked).length;
+  document.getElementById('ckCount').textContent = n;
+  document.getElementById('ckDone').textContent = n === boxes.length ? '🎉 全部完成，可以上線了！' : '';
+});
+
+/* 投影片 18：小測驗 */
+document.querySelectorAll('[data-q]').forEach(q => {
+  q.querySelectorAll('.opt').forEach(o => o.onclick = () => {
+    q.querySelectorAll('.opt').forEach(x => x.classList.remove('right','wrong'));
+    const ok = o.dataset.ok === '1';
+    o.classList.add(ok ? 'right' : 'wrong');
+    const fb = q.querySelector('.fb');
+    fb.textContent = (ok ? '✅ 答對！' : '❌ 再想想：') + fb.dataset.fb;
+  });
+});
+
+show(parseInt(location.hash.slice(1)) - 1 || 0);
+</script>
+</body>
+</html>
